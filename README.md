@@ -15,3 +15,6 @@ Create a RESTful API service for the blog
 
 4. Create a administrator user:\
 ` python manage.py createsuperuser `
+
+
+PS: I am still working on the rate system and The authentication system is still unfinished.
