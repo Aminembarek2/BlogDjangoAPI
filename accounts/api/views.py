@@ -10,6 +10,7 @@ from rest_framework.generics import (
     ListAPIView, 
     UpdateAPIView,
     RetrieveAPIView,
+    DestroyAPIView,
     )
 from rest_framework.permissions import (
     AllowAny,
@@ -20,7 +21,7 @@ from rest_framework.permissions import (
     )
 from django.db import IntegrityError
 from django.core.exceptions import ValidationError
-from articles.api.permissions import IsOwnerOrReadOnly
+from .permissions import IsOwnerOrReadOnly
 from django.contrib.auth import (
     authenticate,
     login,
@@ -40,7 +41,7 @@ from django.contrib.auth import (
 #             new_data = serializer.data
 #             return Response(new_data, status=HTTP_200_OK)
 #         return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
-@permission_classes([AllowAny])
+@permission_classes([IsAdminUser])
 class UserListAPIView(ListAPIView):
     queryset = User.objects.all()
     serializer_class = RegisterSerializer
@@ -54,10 +55,10 @@ class UserUpdateAPIView(UpdateAPIView):
 
     def perform_update(self, serializer):
         serializer.save(user=self.request.user)
-        #email send_email
+        
 
 @api_view(['DELETE',])    
-@permission_classes([IsOwnerOrReadOnly, IsAdminUser])
+@permission_classes([IsOwnerOrReadOnly])
 def deleteUser(request,slug):
     data={}
     try:
@@ -72,7 +73,7 @@ def deleteUser(request,slug):
 
 # LOGIN / REGISTER / LOGOUT
 
-@api_view(["POST"])
+@api_view(['POST'])
 @permission_classes([AllowAny])
 def Register_Users(request):
     try:
@@ -101,31 +102,31 @@ def Register_Users(request):
 
 #Login
 
-@api_view(["POST"])
+@api_view(['POST'])
 @permission_classes([AllowAny])
 def login_user(request):
-    
         data = {}
         serializer =  UserLoginSerializer(data=request.data)
-        Account=None
         if serializer.is_valid():
             Account = User.objects.get(username=serializer.data["username"])
             token = serializer.data["token"]
-        if Account:
-            if Account.is_active:
-                print(request.user)
-                login(request, Account)
-                data["message"] = "user logged in"
-                data["username"] = Account.username
+            if Account:
+                if Account.is_active:
+                    print(request.user)
+                    login(request, Account)
+                    data["message"] = "user logged in"
+                    data["username"] = Account.username
 
-                Res = {"data": data, "token": token}
+                    Res = {"data": data, "token": token}
 
-                return Response(Res)
+                    return Response(Res)
 
-            else:
-                raise ValidationError({"400": f'Account not active'})
+                else:
+                    raise ValidationError({"400": f'Account not active'})
+        else:
+            return Response(serializer.errors)
 #LogOut
-@api_view(["GET"])
+@api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def User_logout(request):
     Account = User.objects.get(username=request.user)
