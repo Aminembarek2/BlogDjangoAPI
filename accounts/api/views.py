@@ -41,6 +41,7 @@ from django.contrib.auth import (
 #             new_data = serializer.data
 #             return Response(new_data, status=HTTP_200_OK)
 #         return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
+
 @permission_classes([IsAdminUser])
 class UserListAPIView(ListAPIView):
     queryset = User.objects.all()
@@ -117,7 +118,7 @@ def login_user(request):
                     data["message"] = "user logged in"
                     data["username"] = Account.username
 
-                    Res = {"data": data, "token": token}
+                    Res = {"message": data, "Authorization":"Token "+token}
 
                     return Response(Res)
 
